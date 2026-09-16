@@ -5,28 +5,230 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Explorador de Clima</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  body { background-color: #f8f9fa; }
-  #resultado { min-height: 80px; }
-  .tarjeta-clima { max-width: 400px; margin: 0 auto; }
-  .tarjeta-clima img { width: 80px; height: 80px; }
-  .historial-btn { cursor: pointer; }
-  .mensaje-error { max-width: 400px; margin: 0 auto; }
+  :root {
+    --bg-deep: #0D1424;
+    --bg-mid: #1E2A4A;
+    --accent-dawn: #FF9F68;
+    --accent-gold: #FFD166;
+    --text-light: #F4F1EA;
+    --text-muted: #9AA5C1;
+    --glass: rgba(244, 241, 234, 0.06);
+    --glass-border: rgba(244, 241, 234, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    color: var(--text-light);
+    background:
+      radial-gradient(1px 1px at 20% 30%, rgba(244,241,234,0.35), transparent),
+      radial-gradient(1px 1px at 65% 15%, rgba(244,241,234,0.25), transparent),
+      radial-gradient(1.5px 1.5px at 80% 55%, rgba(244,241,234,0.3), transparent),
+      radial-gradient(1px 1px at 40% 70%, rgba(244,241,234,0.2), transparent),
+      radial-gradient(1px 1px at 90% 85%, rgba(244,241,234,0.25), transparent),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 55%, #2B2144 100%);
+    background-attachment: fixed;
+  }
+
+  .container { max-width: 560px; }
+
+  header.encabezado {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header.encabezado h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3rem);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+    color: var(--text-light);
+  }
+
+  header.encabezado p.subtitulo {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  /* ---- formulario de búsqueda ---- */
+  #form-clima {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 0.4rem 0.5rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  #form-clima .form-control {
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-family: "Inter", sans-serif;
+    font-size: 1rem;
+    padding: 0.65rem 1.1rem;
+    box-shadow: none !important;
+  }
+
+  #form-clima .form-control::placeholder {
+    color: var(--text-muted);
+  }
+
+  #form-clima .form-control:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  #form-clima button[type="submit"] {
+    background: linear-gradient(135deg, var(--accent-dawn), var(--accent-gold));
+    border: none;
+    border-radius: 999px;
+    color: var(--bg-deep);
+    font-weight: 600;
+    padding: 0.65rem 1.4rem;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  #form-clima button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  #form-clima button[type="submit"]:disabled {
+    opacity: 0.55;
+  }
+
+  #error-validacion {
+    padding-left: 1.1rem;
+    padding-top: 0.35rem;
+    color: var(--accent-dawn) !important;
+    font-size: 0.85rem;
+  }
+
+  /* ---- historial ---- */
+  #contenedor-historial small {
+    color: var(--text-muted) !important;
+    font-size: 0.8rem;
+    letter-spacing: 0.01em;
+  }
+
+  .historial-btn {
+    background: transparent !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-muted) !important;
+    border-radius: 999px !important;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.85rem !important;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .historial-btn:hover {
+    border-color: var(--accent-gold) !important;
+    color: var(--accent-gold) !important;
+  }
+
+  /* ---- estado: cargando ---- */
+  #resultado .spinner-border {
+    color: var(--accent-gold) !important;
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  #resultado .text-center p {
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+  }
+
+  /* ---- estado: error ---- */
+  .mensaje-error {
+    background: rgba(255, 159, 104, 0.1) !important;
+    border: 1px solid rgba(255, 159, 104, 0.35) !important;
+    border-radius: 16px;
+    color: var(--text-light) !important;
+    padding: 1.4rem 1.2rem;
+  }
+
+  .mensaje-error #btn-reintentar {
+    background: transparent;
+    border: 1px solid var(--accent-dawn);
+    color: var(--accent-dawn);
+    border-radius: 999px;
+    padding: 0.4rem 1.2rem;
+    font-weight: 500;
+  }
+
+  .mensaje-error #btn-reintentar:hover {
+    background: var(--accent-dawn);
+    color: var(--bg-deep);
+  }
+
+  /* ---- estado: resultado ---- */
+  .tarjeta-clima {
+    background: var(--glass) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 24px !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .tarjeta-clima .card-title {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    text-transform: none;
+    margin-bottom: 0;
+  }
+
+  .tarjeta-clima h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 4rem;
+    line-height: 1;
+    margin: 0.2rem 0 0.4rem;
+    color: var(--text-light);
+  }
+
+  .tarjeta-clima p.text-capitalize {
+    color: var(--accent-gold) !important;
+    font-size: 1.05rem;
+  }
+
+  .tarjeta-clima p.text-muted {
+    color: var(--text-muted) !important;
+    font-size: 0.9rem;
+  }
+
+  .tarjeta-clima img {
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  }
 </style>
 </head>
 <body>
 <div class="container py-5">
-  <h1 class="text-center mb-4">Explorador de Clima</h1>
+  <header class="encabezado">
+    <h1>Explorador de Clima</h1>
+    <p class="subtitulo">Busca una ciudad y mira cómo está su cielo ahora mismo.</p>
+  </header>
 
-  <form id="form-clima" class="row g-2 mb-3 justify-content-center">
-    <div class="col-8 col-md-6">
+  <form id="form-clima" class="row g-2 mb-3 justify-content-center align-items-center">
+    <div class="col-8 col-md-8">
       <input type="text" id="input-ciudad" class="form-control" placeholder="Ej: Quito" maxlength="40" required>
-      <div id="error-validacion" class="form-text text-danger" style="display:none;"></div>
     </div>
-    <div class="col-4 col-md-2">
-      <button type="submit" class="btn btn-primary w-100">Buscar</button>
+    <div class="col-4 col-md-4">
+      <button type="submit" class="w-100">Buscar</button>
     </div>
   </form>
+  <div id="error-validacion" class="mb-3" style="display:none;"></div>
 
   <div class="text-center mb-4" id="contenedor-historial" style="display:none;">
     <small class="text-muted d-block mb-1">Búsquedas recientes:</small>
@@ -102,7 +304,7 @@
   const mostrarCargando = () => {
     resultado.innerHTML = `
       <div class="text-center">
-        <div class="spinner-border text-primary" role="status"></div>
+        <div class="spinner-border" role="status"></div>
         <p class="mt-2">Cargando...</p>
       </div>
     `;
@@ -110,9 +312,9 @@
 
   const mostrarError = (mensaje, ciudad) => {
     resultado.innerHTML = `
-      <div class="alert alert-danger text-center mensaje-error">
+      <div class="text-center mensaje-error">
         <p class="mb-2">${mensaje}</p>
-        <button type="button" class="btn btn-sm btn-danger" id="btn-reintentar">Reintentar</button>
+        <button type="button" id="btn-reintentar">Reintentar</button>
       </div>
     `;
 
@@ -140,7 +342,7 @@
     `;
   };
 
-// ---- conexión con la API ----
+  // ---- conexión con la API ----
   const buscarClima = async (ciudad) => {
     form.querySelector("button").disabled = true;
     mostrarCargando();
