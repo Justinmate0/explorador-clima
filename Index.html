@@ -140,8 +140,9 @@
     `;
   };
 
-  // ---- conexión con la API ----
+// ---- conexión con la API ----
   const buscarClima = async (ciudad) => {
+    form.querySelector("button").disabled = true;
     mostrarCargando();
     try {
       const url = `${API_URL}?q=${encodeURIComponent(ciudad)}&appid=${API_KEY}&units=metric&lang=es`;
@@ -160,6 +161,8 @@
     } catch (error) {
       const mensaje = error.message || "No se pudo conectar con el servicio de clima.";
       mostrarError(mensaje, ciudad);
+    } finally {
+      form.querySelector("button").disabled = false;
     }
   };
 
